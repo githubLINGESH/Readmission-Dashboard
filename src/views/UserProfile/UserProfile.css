@@ -1,0 +1,80 @@
+.user-profile-content {
+    padding: 20px;
+    background-color: #f4f7fa; /* Light background for better contrast */
+  }
+  
+  .user-profile-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  }
+  
+  .user-profile-header {
+    display: flex;
+    align-items: center; /* Align profile picture and text */
+    background-color: #5499c7; /* Primary color for header */
+    color: white;
+    border-radius: 10px 10px 0 0; /* Rounded top corners */
+    padding: 20px;
+  }
+  
+  .user-profile-header-content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .user-profile-picture {
+    border-radius: 50%; /* Circular profile picture */
+    width: 100px;
+    height: 100px;
+    margin-right: 20px; /* Space between picture and text */
+    border: 2px solid white; /* White border around picture */
+  }
+  
+  .user-profile-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .user-profile-name {
+    font-size: 1.5rem; /* Larger font size for name */
+    font-weight: bold; /* Bold text for name */
+  }
+  
+  .user-profile-email {
+    font-size: 1rem; /* Standard font size for email */
+    color: rgba(255, 255, 255, 0.8); /* Lighter color for email */
+  }
+  
+  .user-profile-title {
+    font-weight: bold;
+    margin-top: 20px; /* Space above section headings */
+    color: #5499c7; /* Section heading color */
+  }
+  
+  .user-profile-list {
+    list-style-type: none; /* Remove default list styles */
+    padding: 0; /* Remove padding */
+    margin-bottom: 20px; /* Space below list */
+  }
+  
+  .user-profile-table {
+    margin-bottom: 20px; /* Space below tables */
+    border-collapse: collapse; /* Collapse table borders */
+  }
+  
+  th,
+  td {
+    padding: 12px; /* Padding for table cells */
+    text-align: left; /* Align text to the left */
+    border-bottom: 1px solid #dee2e6; /* Bottom border for rows */
+  }
+  
+  th {
+    background-color: #5499c7; /* Header background color */
+    color: white; /* Header text color */
+  }
+  
+  tbody tr:hover {
+    background-color: #e9f5fb; /* Highlight row on hover */
+  }
+  
