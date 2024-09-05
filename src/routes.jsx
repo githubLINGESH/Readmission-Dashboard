@@ -3,7 +3,8 @@ import PatientDetails from "./views/PatientDetails/PatientDetails";
 import Analytics from "./views/Analytics";
 import RiskFactors from "./views/RiskFactors";
 import ReadmissionRiskTable from "./views/Notifications";
-import { faDashboard, faNotesMedical , faDatabase, faAsterisk, faMessage} from '@fortawesome/free-solid-svg-icons';
+import RiskPrediction from "./views/RiskPrediction";
+import { faDashboard, faNotesMedical , faDatabase, faAsterisk, faMessage, faAddressBook} from '@fortawesome/free-solid-svg-icons';
 
 const routes = [
   {
@@ -41,6 +42,14 @@ const routes = [
     element: <ReadmissionRiskTable />,
     layout: "/admin"
   },
+  {
+    path: "/risk-prediction",
+    name:"risk-prediction",
+    icon: faAddressBook,
+    element: <RiskPrediction/>,
+    layout: "/admin"
+
+  }
 ];
 
 export default routes;
