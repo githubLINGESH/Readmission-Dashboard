@@ -1,38 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Doughnut, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement } from 'chart.js';
+import { Card, CardHeader, CardBody, Row, Col, Form, FormGroup, Label, Input, Button } from "reactstrap";
+// import './PatientAnalysis.css';  // Include a custom CSS file for additional styling
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
+ChartJS.register(ArcElement, Tooltip, Legend, BarElement);
 
-const PatientAnalysis = ({ subjectId }) => {
+const fetchAnalysis = async (subjectId, setAnalysis, setLoading, setError) => {
+  try {
+    setLoading(true);
+    console.log("SubjectId", subjectId);
+    const predictionResponse = await axios.post('http://127.0.0.1:8000/predict', { subject_id: subjectId });
+    const llmResponse = await axios.post('http://127.0.0.1:8000/llm_analysis', { 
+      subjectId,
+      predictionData: predictionResponse.data 
+    });
+    setAnalysis({
+      ...predictionResponse.data,
+      llm_analysis: llmResponse.data
+    });
+    setLoading(false);
+  } catch (err) {
+    setError('Failed to fetch patient analysis');
+    setLoading(false);
+  }
+};
+
+
+const PatientAnalysis = () => {
+  const [subjectId, setSubjectId] = useState("");
   const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (subjectId) {
+      fetchAnalysis(subjectId, setAnalysis, setLoading, setError);
+    }
+  };
+
   useEffect(() => {
-    const fetchAnalysis = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`http://localhost:8000/api/patient/${10000032}/full_analysis`);
-        setAnalysis(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch patient analysis');
-        setLoading(false);
-      }
-    };
+    // Initial data fetch can be optional based on your design
+  }, []);
 
-    fetchAnalysis();
-  }, [subjectId]);
+  if (loading) return <div className="text-center text-lg font-semibold">Loading...</div>;
 
-  if (loading) return <div className="text-center">Loading...</div>;
-  if (error) return <div className="text-red-500 text-center">{error}</div>;
-  if (!analysis) return <div className="text-center">No analysis available</div>;
+  const { probability = 0, risk_level = 'Unknown', recommendation = 'No recommendation available' } = analysis || {};
+  const { 
+    summary = {},
+    care_plan = {},
+    additional_fields = {}
+  } = (analysis && analysis.llm_analysis) || {};
 
-  const { risk_assessment, patient_history, care_plan } = analysis;
-  const riskScore = risk_assessment.risk_score;
-  const keyRiskFactors = risk_assessment.risk_factors;
+  const riskScore = probability * 100;
 
   const riskChartData = {
     labels: ['Risk', 'Safe'],
@@ -43,67 +65,128 @@ const PatientAnalysis = ({ subjectId }) => {
     }]
   };
 
-  const factorsChartData = {
-    labels: keyRiskFactors.map(factor => factor.split(':')[0]),
+  const keyFactorsData = analysis && analysis.top_features ? {
+    labels: analysis.top_features.map(f => f.Feature),  // Feature names
     datasets: [{
-      label: 'Risk Factors',
-      data: keyRiskFactors.map(() => Math.random() * 100),
-      backgroundColor: 'rgba(75, 192, 192, 0.6)',
+      label: 'Key Factors',
+      data: analysis.top_features.map(f => f.Importance),  // Feature importance values
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FFCD56', '#4BC0C0', '#7D4CDB', '#D4E157']
     }]
+  } : null;
+
+  const renderSection = (title, data) => {
+    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) return null;
+
+    return (
+      <Card className="mb-6 shadow-md rounded-lg">
+        <CardHeader className="bg-primary text-white p-4">
+          <h2 className="text-2xl font-bold">{title}</h2>
+        </CardHeader>
+        <CardBody className="p-6">
+          {typeof data === 'string' ? (
+            <p className="text-gray-700 text-base leading-relaxed">{data}</p>
+          ) : (
+            Object.entries(data).map(([key, value], index) => (
+              <div key={index} className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">{key}</h3>
+                {typeof value === 'object' ? (
+                  <ul className="list-disc pl-5 text-gray-600">
+                    {Object.entries(value).map(([subKey, subValue], subIndex) => (
+                      <li key={subIndex}>{subKey}{subValue && `: ${subValue}`}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-600">{value}</p>
+                )}
+              </div>
+            ))
+          )}
+        </CardBody>
+      </Card>
+    );
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Patient Analysis for Subject ID: {subjectId}</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Readmission Risk</h2>
-          <Doughnut data={riskChartData} />
-        </div>
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Key Risk Factors</h2>
-          <Bar data={factorsChartData} />
-        </div>
+    <div className="content">
+    <div className="content bg-light-gray py-10">
+      <div className="container max-w-7xl mx-auto">
+        {/* Form Section for Subject ID Input */}
+        <Form onSubmit={handleFormSubmit} className="mb-8">
+          <Row className="justify-content-center">
+            <Col md="4">
+              <FormGroup>
+                <Label for="subjectId">Enter Subject ID</Label>
+                <Input 
+                  type="text" 
+                  id="subjectId" 
+                  value={subjectId} 
+                  onChange={(e) => setSubjectId(e.target.value)} 
+                  placeholder="e.g. 10004235"
+                  required
+                />
+              </FormGroup>
+            </Col>
+            <Col md="2" className="align-self-end">
+              <Button color="primary" type="submit">Submit</Button>
+            </Col>
+          </Row>
+        </Form>
+
+        {/* Analysis Results */}
+        <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-10">Patient Analysis</h1>
+        
+        {analysis && (
+          <>
+            <Row className="mb-12">
+              <Col md="6">
+                <Card className="shadow-md rounded-lg">
+                  <CardHeader className="bg-secondary text-white p-4">
+                    <h2 className="text-2xl font-semibold">Readmission Risk</h2>
+                  </CardHeader>
+                  <CardBody className="p-6">
+                    <Doughnut data={riskChartData} />
+                  </CardBody>
+                </Card>
+              </Col>
+
+              <Col md="6">
+                <Card className="shadow-md rounded-lg">
+                  <CardHeader className="bg-secondary text-white p-4">
+                    <h2 className="text-2xl font-semibold">Current Condition</h2>
+                  </CardHeader>
+                  <CardBody className="p-6">
+                    <p className="text-gray-700"><strong>Probability:</strong> {probability.toFixed(2)}</p>
+                    <p className="text-gray-700"><strong>Risk score:</strong> {riskScore.toFixed(2)}</p>
+                    <p className="text-gray-700"><strong>Risk Level:</strong> {risk_level}</p>
+                    <p className="text-gray-700"><strong>Recommendation:</strong> {recommendation}</p>
+                  </CardBody>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Key Factors Chart */}
+            <Row className="mb-12">
+              <Col md="12">
+                <Card className="shadow-md rounded-lg">
+                  <CardHeader className="bg-info text-white p-4">
+                    <h2 className="text-2xl font-semibold">Key Factors</h2>
+                  </CardHeader>
+                  <CardBody className="p-6">
+                    <Bar data={keyFactorsData} />
+                  </CardBody>
+                </Card>
+              </Col>
+            </Row>
+
+            <div className="space-y-8">
+              {renderSection("Patient Summary", summary)}
+              {renderSection("Care Plan", care_plan)}
+              {renderSection("Additional Considerations", additional_fields)}
+            </div>
+          </>
+        )}
       </div>
-
-      <div className="space-y-6">
-        <section>
-          <h2 className="text-2xl font-semibold mb-2">Patient History Summary</h2>
-          <div className="bg-white p-4 rounded shadow">
-            {patient_history.summary.split('\n').map((line, index) => (
-              <p key={index}>{line}</p>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-2">Current Condition</h2>
-          <div className="bg-white p-4 rounded shadow">
-            <p>{risk_assessment.detailed_assessment}</p>
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-2">Personalized Care Plan</h2>
-          <div className="bg-white p-4 rounded shadow">
-            {care_plan.plan.split('\n').map((line, index) => (
-              <p key={index}>{line}</p>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-2">Key Risk Factors</h2>
-          <div className="bg-white p-4 rounded shadow">
-            <ul className="list-disc pl-5">
-              {keyRiskFactors.map((factor, index) => (
-                <li key={index}>{factor}</li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      </div>
+    </div>
     </div>
   );
 };
