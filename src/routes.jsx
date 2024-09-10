@@ -16,13 +16,13 @@ const routes = [
     element: <Dashboard />,
     layout: "/admin"
   },
-  {
-    path: "/model-prediction",
-    name: "Model",
-    icon: faListNumeric,
-    element: <ModelPrediction />,
-    layout: "/admin"
-  },
+  // {
+  //   path: "/model-prediction",
+  //   name: "Model",
+  //   icon: faListNumeric,
+  //   element: <ModelPrediction />,
+  //   layout: "/admin"
+  // },
   {
     path: "/patient-details",
     name: "Patient Details",

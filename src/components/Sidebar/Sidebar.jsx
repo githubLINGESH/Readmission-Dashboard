@@ -5,7 +5,7 @@ import { Nav } from "reactstrap";
 import PerfectScrollbar from "perfect-scrollbar";
 import logo from "../../assets/img/logo.svg";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDashboard, faNotesMedical , faDatabase, faAsterisk, faMessage} from '@fortawesome/free-solid-svg-icons';
+import { faPerson, faNotesMedical , faDatabase, faAsterisk, faMessage, faHandsHelping} from '@fortawesome/free-solid-svg-icons';
 
 var ps;
 
@@ -42,7 +42,9 @@ function Sidebar(props) {
           className="simple-text logo-mini"
         >
           <div className="logo-img">
-            <img src={logo} alt="react-logo" />
+                  <i className="text-center text-warning">
+                      <FontAwesomeIcon icon={faPerson} style={{ color: 'grey' }}/>
+                  </i>
           </div>
         </a>
         <a

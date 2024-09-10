@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 // const sequelize = require('../config/db'); // Assuming you have a database config file
 
-const sequelize = new Sequelize('postgres://postgres:vijay123@localhost:5432/mimiciv', {
+const sequelize = new Sequelize('postgres://postgres:Ling2522@localhost:5432/mimic_4', {
     dialect: 'postgres',
     logging: false, // set to console.log to see the raw SQL queries
   });

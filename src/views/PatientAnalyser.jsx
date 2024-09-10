@@ -108,7 +108,7 @@ const PatientAnalysis = () => {
 
   return (
     <div className="content">
-    <div className="content bg-light-gray py-10">
+    <div className="bg-light-gray py-10">
       <div className="container max-w-7xl mx-auto">
         {/* Form Section for Subject ID Input */}
         <Form onSubmit={handleFormSubmit} className="mb-8">
@@ -165,7 +165,7 @@ const PatientAnalysis = () => {
             </Row>
 
             {/* Key Factors Chart */}
-            <Row className="mb-12">
+            {/* <Row className="mb-12">
               <Col md="12">
                 <Card className="shadow-md rounded-lg">
                   <CardHeader className="bg-info text-white p-4">
@@ -176,7 +176,7 @@ const PatientAnalysis = () => {
                   </CardBody>
                 </Card>
               </Col>
-            </Row>
+            </Row> */}
 
             <div className="space-y-8">
               {renderSection("Patient Summary", summary)}

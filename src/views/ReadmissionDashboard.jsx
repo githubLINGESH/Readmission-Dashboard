@@ -350,7 +350,7 @@ function Dashboard() {
                 <CardTitle tag="h5">Admissions Over Time</CardTitle>
                 <p className="card-category">Past Year Performance</p>
               </CardHeader>
-              <CardBody style={{ height: "266px" }} className="m-2">
+              <CardBody style={{ height: "266px" }} className="m-4">
                 <Line
                   data={totalAdmissionsChart.data}
                   options={totalAdmissionsChart.options}

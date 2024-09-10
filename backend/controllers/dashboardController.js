@@ -62,10 +62,12 @@ exports.getDashboardData = async (req, res) => {
     `);
 
     const highRiskCount = await safeQuery(`
-      SELECT COUNT(*) AS count
-      FROM risk_factors
-      WHERE (age_risk + diabetes_risk + heart_disease_risk + bmi_risk) / 4 >= 70
-    `);
+      SELECT COUNT(DISTINCT subject_id) AS count
+      FROM patient_analysis.risk_prediction
+      WHERE risk_level = 'High'
+    `);    
+
+
 
     const totalAdmissions = await safeQuery(`
       SELECT COUNT(*) AS count
@@ -103,3 +105,5 @@ exports.getDashboardData = async (req, res) => {
     res.status(500).json({ error: 'An error occurred while fetching dashboard data' });
   }
 };
+
+

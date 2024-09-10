@@ -5,6 +5,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const RiskRoutes = require('./routes/RiskFactorRoute');
 const ReadmissionRoutes = require('./routes/ReadmissionRoutes');
+const patientRoutes = require('./routes/patientRoutes');
 const cors = require('cors');
 
 // Initialize an Express app
@@ -28,6 +29,7 @@ app.get('/', (req, res) => {
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/risk-factor', RiskRoutes,ReadmissionRoutes);
+app.use('/api/patient', patientRoutes);
 
 // Start the server on a specified port
 const PORT = process.env.PORT || 5000;

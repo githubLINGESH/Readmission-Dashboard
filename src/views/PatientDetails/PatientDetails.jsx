@@ -1,380 +1,332 @@
-import React, { useState } from "react";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardTitle,
-  Row,
-  Col,
-  Table,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  Button,
-  Input,
-  Nav,
-  NavItem,
-  NavLink,
-  TabContent,
-  TabPane
-} from "reactstrap";
-import { format } from 'date-fns';
-import { Bar } from "react-chartjs-2";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-} from 'recharts';
-import './PatientDetails.css';
-
-
-const initialPatientData = {
-  name: "KARTHIK",
-  age: 45,
-  dateOfBirth: "1979-05-15",
-  gender: "Male",
-  bloodGroup: "O+",
-  weight: 75,
-  height: 175,
-  bmi: 24.5,
-  contact: "987-838-4898",
-  email: "karthik.doe@example.com",
-  address: "123 Main St, Springfield",
-  occupation: "Engineer",
-  insuranceProvider: "HealthCare Inc.",
-  insuranceNumber: "HC123456789",
-  emergencyContact: {
-    name: "Jane",
-    relationship: "Wife",
-    phone: "987-654-3210",
-  },
-  medicalHistory: [
-    { condition: "Hypertension", diagnosed: "2015-03-10", status: "Ongoing" },
-    { condition: "Diabetes Type 2", diagnosed: "2020-07-22", status: "Managed" },
-    { condition: "Asthma", diagnosed: "2018-11-05", status: "Controlled" },
-    { condition: "Appendectomy", diagnosed: "2010-09-18", status: "Resolved" },
-  ],
-  medications: [
-    { name: "Lisinopril", dosage: "10 mg", frequency: "Daily", startDate: "2015-03-15" },
-    { name: "Metformin", dosage: "500 mg", frequency: "Twice Daily", startDate: "2020-07-25" },
-    { name: "Albuterol", dosage: "90 mcg", frequency: "As needed", startDate: "2018-11-10" },
-  ],
-  allergies: ["Peanuts", "Penicillin", "Latex"],
-  immunizations: [
-    { name: "Influenza", date: "2023-10-01" },
-    { name: "COVID-19", date: "2023-05-15" },
-    { name: "Tetanus", date: "2020-03-20" },
-  ],
-  labResults: [
-    { test: "HbA1c", result: "6.5%", date: "2023-06-01", normalRange: "4.0-5.6%" },
-    { test: "Blood Pressure", result: "128/82 mmHg", date: "2023-06-01", normalRange: "<120/80 mmHg" },
-    { test: "Cholesterol", result: "195 mg/dL", date: "2023-06-01", normalRange: "<200 mg/dL" },
-  ],
-  vitalSigns: [
-    { date: "2023-06-01", bloodPressure: "128/82", heartRate: 72, temperature: 36.6 },
-    { date: "2023-05-01", bloodPressure: "130/85", heartRate: 75, temperature: 36.7 },
-    { date: "2023-04-01", bloodPressure: "126/80", heartRate: 70, temperature: 36.5 },
-  ],
-  recentVisits: [
-    { date: "2023-06-15", reason: "Routine Checkup", doctor: "Dr. Smith", notes: "Patient reported feeling well. No significant changes." },
-    { date: "2023-05-10", reason: "Asthma Follow-up", doctor: "Dr. Johnson", notes: "Asthma well-controlled. Continued current management plan." },
-    { date: "2023-04-05", reason: "Diabetes Management", doctor: "Dr. Patel", notes: "HbA1c slightly elevated. Adjusted Metformin dosage." },
-  ],
-};
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Card, CardHeader, CardBody, CardTitle, Row, Col, Input, Button, Table } from 'reactstrap';
+import { Doughnut, Bar } from 'react-chartjs-2'; // Ensure react-chartjs-2 is installed
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 function PatientDetails() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [patientData, setPatientData] = useState(initialPatientData);
-  const [activeTab, setActiveTab] = useState('1');
+  const [subjectId, setSubjectId] = useState('');
+  const [patientData, setPatientData] = useState(null);
+  const [riskPredictions, setRiskPredictions] = useState([]);
+  const [llmAnalyses, setLlmAnalyses] = useState([]);
+  const [selectedTimestamp, setSelectedTimestamp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [riskChartData, setRiskChartData] = useState(null);
+  const [probability, setProbability] = useState(null);
+  const [riskScore, setRiskScore] = useState(null);
+  const [riskLevel, setRiskLevel] = useState(null);
+  const [recommendation, setRecommendation] = useState(null);
+  const [summary, setSummary] = useState('');
+  const [carePlan, setCarePlan] = useState('');
+  const [additionalFields, setAdditionalFields] = useState('');
 
-  const handleSearch = () => {
-    if (searchTerm.toLowerCase() === "john doe") {
-      setPatientData(initialPatientData);
-    } else {
-      setPatientData(null);
+  const fetchPatientData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = `http://localhost:5000/api/patient/details/${subjectId}?timestamp=${selectedTimestamp}`;
+      const response = await axios.get(apiUrl);
+      const {
+        riskPrediction,
+        llmAnalysis,
+        visualizationData,
+        riskChartData,
+        probability,
+        riskScore,
+        risk_level,
+        recommendation,
+        summary,
+        care_plan,
+        additional_fields,
+        riskPredictions,
+        llmAnalyses,
+      } = response.data;
+
+      setPatientData(visualizationData);
+      setRiskPredictions(Array.isArray(riskPredictions) ? riskPredictions : []);
+      setLlmAnalyses(Array.isArray(llmAnalyses) ? llmAnalyses : []);
+      setRiskChartData(riskChartData);
+      setProbability(probability);
+      setRiskScore(riskScore);
+      setRiskLevel(risk_level);
+      setRecommendation(recommendation);
+      setSummary(summary);
+      setCarePlan(care_plan);
+      setAdditionalFields(additional_fields);
+    } catch (error) {
+      setError('Error fetching patient data.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const toggleTab = (tab) => {
-    if (activeTab !== tab) setActiveTab(tab);
-  };
+  useEffect(() => {
+    if (subjectId) {
+      fetchPatientData();
+    }
+  }, [subjectId, selectedTimestamp]);
 
-  const renderVitalSignsChart = () => {
+  const renderSection = (title, data) => {
+    if (!data) return null;
+
     return (
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={patientData.vitalSigns}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis yAxisId="left" />
-          <YAxis yAxisId="right" orientation="right" />
-          <Tooltip />
-          <Legend />
-          <BarChart yAxisId="left" type="monotone" dataKey="heartRate" stroke="#8884d8" name="Heart Rate" />
-          <BarChart yAxisId="right" type="monotone" dataKey="temperature" stroke="#82ca9d" name="Temperature" />
-        </BarChart>
-      </ResponsiveContainer>
+      <Card className="mb-6 shadow-md rounded-lg">
+        <CardHeader className="bg-primary text-white p-4">
+          <h2 className="text-2xl font-bold">{title}</h2>
+        </CardHeader>
+        <CardBody className="p-6">
+          {typeof data === 'string' ? (
+            <p className="text-gray-700">{data}</p>
+          ) : (
+            Object.entries(data).map(([key, value], index) => (
+              <div key={index}>
+                <h3 className="text-lg font-semibold text-gray-800">{key}</h3>
+                {typeof value === 'object' ? (
+                  <ul>
+                    {Object.entries(value).map(([subKey, subValue], subIndex) => (
+                      <li key={subIndex}>{subKey}: {subValue}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-600">{value}</p>
+                )}
+              </div>
+            ))
+          )}
+        </CardBody>
+      </Card>
     );
   };
 
-  const renderLabResultsChart = () => {
-    const labData = patientData.labResults.map(result => ({
-      date: format(new Date(result.date), 'MMM dd, yyyy'),
-      value: parseFloat(result.result)
-    }));
+  const renderTimestampDropdown = () => (
+    <Input
+      type="select"
+      value={selectedTimestamp}
+      onChange={(e) => setSelectedTimestamp(e.target.value)}
+    >
+      <option value="">Latest</option>
+      {riskPredictions.map((prediction) => (
+        <option key={prediction.timestamp} value={new Date(prediction.timestamp).toISOString()}>
+          {new Date(prediction.timestamp).toLocaleString()}
+        </option>
+      ))}
+    </Input>
+  );
+
+  const renderAdmissionStatsChart = () => {
+    if (!patientData || !patientData.admissionStats) return null;
+
+    const admissionData = [
+      { name: 'Total Admissions', value: patientData.admissionStats.totalAdmissions },
+      { name: 'Total ICU Stays', value: patientData.admissionStats.totalICUStays },
+      { name: 'Emergency Admissions', value: patientData.admissionStats.emergencyAdmissions },
+      { name: 'Elective Admissions', value: patientData.admissionStats.electiveAdmissions }
+    ];
 
     return (
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={labData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="value" stroke="#8884d8" name="Lab Result" />
-        </LineChart>
-      </ResponsiveContainer>
-    );
-  };
-
-  const renderMedicationChart = () => {
-    const medData = patientData.medications.map((med, index) => ({
-      name: med.name,
-      dosage: parseInt(med.dosage) || 0, // Parse dosage as a number
-    }));
-
-    return (
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={medData}>
+        <LineChart data={admissionData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="dosage" stroke="#82ca9d" name="Dosage (mg)" />
+          <Line type="monotone" dataKey="value" stroke="#82ca9d" />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const renderVitalSignsChart = () => {
+    if (!patientData || !patientData.vitalSigns) return null;
+
+    const vitalData = [
+      { name: 'Heart Rate', value: patientData.vitalSigns.avgHeartRate },
+      { name: 'Respiratory Rate', value: patientData.vitalSigns.avgRespiratoryRate },
+      { name: 'Temperature', value: patientData.vitalSigns.avgTemperature },
+      { name: 'SBP', value: patientData.vitalSigns.avgSBP },
+      { name: 'DBP', value: patientData.vitalSigns.avgDBP },
+      { name: 'O2 Saturation', value: patientData.vitalSigns.avgO2Saturation },
+    ];
+
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={vitalData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
         </LineChart>
       </ResponsiveContainer>
     );
   };
 
   return (
-    <div className="patient-details-content">
+    <div className="content">
       <Row>
         <Col md="12">
-          <Card className="patient-details-card">
-            <CardHeader className="patient-details-header">
+          <Card>
+            <CardHeader>
               <CardTitle tag="h5">Patient Details</CardTitle>
-              <p className="patient-details-category">
-                Comprehensive patient information for healthcare professionals.
-              </p>
+              <p className="card-category">Enter a subject ID to view patient information</p>
             </CardHeader>
             <CardBody>
-            <form className="flex w-1/2">
-                <InputGroup className="patient-search-bar">
-                  <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                  <InputGroupAddon addonType="append">
-                    <Button onClick={handleSearch}>Search</Button>
-                  </InputGroupAddon>
-                </InputGroup>
-              </form>
+              <Input
+                placeholder="Enter Subject ID"
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+              />
+              <Button color="primary" onClick={fetchPatientData}>Fetch Data</Button>
 
-              {patientData ? (
+              {loading && <p>Loading patient data...</p>}
+              {error && <p className="text-danger">{error}</p>}
+
+              {patientData && (
                 <>
-                  <Row className="patient-info-section">
-                    <Col md="6">
-                      <h5 className="patient-details-subtitle">Basic Information</h5>
-                      <ul className="patient-details-list">
-                        <li><strong>Name:</strong> {patientData.name}</li>
-                        <li><strong>Age:</strong> {patientData.age}</li>
-                        <li><strong>Date of Birth:</strong> {patientData.dateOfBirth}</li>
-                        <li><strong>Gender:</strong> {patientData.gender}</li>
-                        <li><strong>Blood Group:</strong> {patientData.bloodGroup}</li>
-                        <li><strong>Height:</strong> {patientData.height} cm</li>
-                        <li><strong>Weight:</strong> {patientData.weight} kg</li>
-                        <li><strong>BMI:</strong> {patientData.bmi.toFixed(1)}</li>
-                      </ul>
-                    </Col>
-                    <Col md="6">
-                      <h5 className="patient-details-subtitle">Contact Information</h5>
-                      <ul className="patient-details-list">
-                        <li><strong>Contact:</strong> {patientData.contact}</li>
-                        <li><strong>Email:</strong> {patientData.email}</li>
-                        <li><strong>Address:</strong> {patientData.address}</li>
-                        <li><strong>Occupation:</strong> {patientData.occupation}</li>
-                        <li><strong>Insurance Provider:</strong> {patientData.insuranceProvider}</li>
-                        <li><strong>Insurance Number:</strong> {patientData.insuranceNumber}</li>
-                        <li><strong>Emergency Contact:</strong> {patientData.emergencyContact.name} ({patientData.emergencyContact.relationship}) - {patientData.emergencyContact.phone}</li>
-                      </ul>
-                    </Col>
-                  </Row>
+                  <div className="mb-3">
+                    <h5>Select Analysis by Timestamp</h5>
+                    {renderTimestampDropdown()}
+                  </div>
 
-                  <Nav tabs>
-                    <NavItem>
-                      <NavLink className={activeTab === '1' ? 'active' : ''} onClick={() => toggleTab('1')}>
-                        Medical History
-                      </NavLink>
-                    </NavItem>
-                    <NavItem>
-                      <NavLink className={activeTab === '2' ? 'active' : ''} onClick={() => toggleTab('2')}>
-                        Medications & Allergies
-                      </NavLink>
-                    </NavItem>
-                    <NavItem>
-                      <NavLink className={activeTab === '3' ? 'active' : ''} onClick={() => toggleTab('3')}>
-                        Lab Results & Vital Signs
-                      </NavLink>
-                    </NavItem>
-                    <NavItem>
-                    <NavLink
-                        className={`${activeTab === '4' ? 'active' : ''} custom-nav-link`}
-                        onClick={() => { toggleTab('4'); }}
-                      >
-                        Recent Visits
-                      </NavLink>
-                    </NavItem>
-                  </Nav>
+                  <Table responsive>
+                    <thead>
+                      <tr>
+                        <th>Field</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Subject ID</strong></td>
+                        <td>{patientData.basicInfo.subject_id}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Age</strong></td>
+                        <td>{patientData.basicInfo.age}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Gender</strong></td>
+                        <td>{patientData.basicInfo.gender}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Insurance Provider</strong></td>
+                        <td>{patientData.basicInfo.insuranceProvider}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
 
-                  <TabContent activeTab={activeTab}>
-                    <TabPane tabId="1">
-                      <h5 className="patient-details-title mt-3">Medical History</h5>
-                      <Table className="patient-details-table">
-                        <thead>
-                          <tr>
-                            <th>Condition</th>
-                            <th>Diagnosed</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {patientData.medicalHistory.map((entry, index) => (
-                            <tr key={index}>
-                              <td>{entry.condition}</td>
-                              <td>{format(new Date(entry.diagnosed), 'MMM dd, yyyy')}</td>
-                              <td>{entry.status}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                      <h5 className="patient-details-title mt-4">Immunizations</h5>
-                      <Table className="patient-details-table">
-                        <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>Date</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {patientData.immunizations.map((immunization, index) => (
-                            <tr key={index}>
-                              <td>{immunization.name}</td>
-                              <td>{format(new Date(immunization.date), 'MMM dd, yyyy')}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </TabPane>
+                  <h5 className="mt-4">Admission Statistics</h5>
+                  {renderAdmissionStatsChart()}
 
-                    <TabPane tabId="2">
-                      <h5 className="patient-details-title mt-3">Current Medications</h5>
-                      <Table className="patient-details-table">
-                        <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>Dosage</th>
-                            <th>Frequency</th>
-                            <th>Start Date</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {patientData.medications.map((medication, index) => (
-                            <tr key={index}>
-                              <td>{medication.name}</td>
-                              <td>{medication.dosage}</td>
-                              <td>{medication.frequency}</td>
-                              <td>{format(new Date(medication.startDate), 'MMM dd, yyyy')}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                      <h5 className="patient-details-title mt-4">Medication Chart</h5>
-                      {renderMedicationChart()}
-                      <h5 className="patient-details-title mt-4">Allergies</h5>
-                      <ul className="patient-details-list">
-                        {patientData.allergies.map((allergy, index) => (
-                          <li key={index}>{allergy}</li>
-                        ))}
-                      </ul>
-                    </TabPane>
+                  <h5 className="mt-4">Vital Signs</h5>
+                  {renderVitalSignsChart()}
 
-                    <TabPane tabId="3">
-                      <h5 className="patient-details-title mt-3">Lab Results</h5>
-                      <Table className="patient-details-table">
-                        <thead>
-                          <tr>
-                            <th>Test</th>
-                            <th>Result</th>
-                            <th>Date</th>
-                            <th>Normal Range</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {patientData.labResults.map((result, index) => (
-                            <tr key={index}>
-                              <td>{result.test}</td>
-                              <td>{result.result}</td>
-                              <td>{format(new Date(result.date), 'MMM dd, yyyy')}</td>
-                              <td>{result.normalRange}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                      <h5 className="patient-details-title mt-4">Vital Signs Chart</h5>
-                      {renderVitalSignsChart()}
-                      <h5 className="patient-details-title mt-4">Lab Results Chart</h5>
-                      {renderLabResultsChart()}
-                    </TabPane>
+                  <h5 className="mt-4">Medical Summary</h5>
+                  <Table responsive>
+                    <thead>
+                      <tr>
+                        <th>Field</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Most Common Diagnosis</strong></td>
+                        <td>{patientData.medicalSummary.mostCommonDiagnosis}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Most Common Procedure</strong></td>
+                        <td>{patientData.medicalSummary.mostCommonProcedure}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Unique Medications</strong></td>
+                        <td>{patientData.medicalSummary.uniqueMedications}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Unique Lab Tests</strong></td>
+                        <td>{patientData.medicalSummary.uniqueLabTests}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
 
-                    <TabPane tabId="4">
-                      <h5 className="patient-details-title mt-3">Recent Visits</h5>
-                      <Table className="patient-details-table">
-                        <thead>
-                          <tr>
-                            <th>Date</th>
-                            <th>Reason</th>
-                            <th>Doctor</th>
-                            <th>Notes</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {patientData.recentVisits.map((visit, index) => (
-                            <tr key={index}>
-                              <td>{format(new Date(visit.date), 'MMM dd, yyyy')}</td>
-                              <td>{visit.reason}</td>
-                              <td>{visit.doctor}</td>
-                              <td>{visit.notes}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </TabPane>
-                  </TabContent>
+                  <h5 className="mt-4">Recent Admission</h5>
+                  <Table responsive>
+                    <thead>
+                      <tr>
+                        <th>Field</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Admission Time</strong></td>
+                        <td>{patientData.recentAdmission.admittime}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Discharge Time</strong></td>
+                        <td>{patientData.recentAdmission.dischtime}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Length of Stay</strong></td>
+                        <td>{patientData.recentAdmission.lengthOfStay}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
                 </>
-              ) : (
-                <Card className="patient-details-card">
-                  <CardBody>
-                    <h5 className="patient-details-title">No patient found with the name "{searchTerm}".</h5>
-                  </CardBody>
-                </Card>
               )}
+
+              
             </CardBody>
           </Card>
         </Col>
       </Row>
+
+      <Card>
+      <CardHeader className="bg-secondary text-white">
+                <CardTitle tag="h5">Latest Risk Prediction</CardTitle>
+      </CardHeader>
+      <CardBody>
+      {riskChartData && (
+        <Row>
+          <Col md="6">
+            <Card>
+              <CardHeader className="bg-secondary text-white">
+                <h2>Readmission Risk</h2>
+              </CardHeader>
+              <CardBody>
+                <Doughnut data={riskChartData} />
+              </CardBody>
+            </Card>
+          </Col>
+
+          <Col md="6">
+            <Card>
+              <CardHeader className="bg-secondary text-white">
+                <h2>Current Condition</h2>
+              </CardHeader>
+              <CardBody>
+                <p>Probability: {probability?.toFixed(2)}</p>
+                <p>Risk Level: {riskLevel}</p>
+                <p>Recommendation: {recommendation}</p>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {summary && (
+        <>
+          {renderSection('Patient Summary', summary)}
+          {renderSection('Care Plan', carePlan)}
+          {renderSection('Additional Considerations', additionalFields)}
+        </>
+      )}
+
+      </CardBody>
+      </Card>
     </div>
   );
 }
